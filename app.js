@@ -2,19 +2,51 @@ var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
+var neo4j = require('neo4j-driver').v1;
 
 var app = express();
-
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', function(req, res){
-    res.send('Funciona');
+var driver = neo4j.driver('bolt://localhost', neo4j.auth.basic('neo4j', '12345'));
+var session = driver.session();
+
+// Obtiene todos los servidores -- sin relación --
+app.get('/getTodosServidores', function(req, res){
+    session.run('MATCH (n:Servidor) RETURN n').then(function(result){
+        var servidores = [];
+        result.records.forEach(function(item){
+            servidores.push({
+                id: item._fields[0].properties.id,
+                pais: item._fields[0].properties.pais,
+                grupo: item._fields[0].properties.grupo,
+                host: item._fields[0].properties.host,
+                servicio: item._fields[0].properties.servicio,
+                conectado: []
+            });
+        });
+
+        /*servidores.forEach(servidor => {
+            console.log(servidor.id);
+            session.run('match (a:Servidor {id:'+ servidor.id + '})-[conectado]->(b:Servidor) return b')
+            .then(function(conn){
+                console.log(conn);
+                //servidor.conectado.push({ serv: conn._fields[0].properties.id });
+            })
+            .catch(function(err){
+                console.log(err);
+            });
+        });*/
+
+        return res.send({ success: true, servidores: servidores });
+
+    }).catch(function(err){
+        console.log(err);
+        return res.send({ success: err });
+    });
 })
 
 app.listen(3000);
