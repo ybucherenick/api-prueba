@@ -29,19 +29,25 @@ app.get('/getTodosServidores', function(req, res){
             });
         });
 
-        /*servidores.forEach(servidor => {
-            console.log(servidor.id);
-            session.run('match (a:Servidor {id:'+ servidor.id + '})-[conectado]->(b:Servidor) return b')
-            .then(function(conn){
-                console.log(conn);
-                //servidor.conectado.push({ serv: conn._fields[0].properties.id });
-            })
-            .catch(function(err){
-                console.log(err);
-            });
-        });*/
-
         return res.send({ success: true, servidores: servidores });
+
+    }).catch(function(err){
+        console.log(err);
+        return res.send({ success: err });
+    });
+})
+
+// Obtiene las relaciones que tiene un servidor en especifico
+app.get('/getRelacion/:id', function(req, res){
+    var id = req.params.id;
+    console.log(req.params.id);
+    session.run('MATCH (a:Servidor {id:{idParam}})-[conectado]->(b:Servidor) RETURN b', {idParam: id}).then(function(result){
+        var conectados = [];
+        result.records.forEach(function(item){
+            conectados.push({ id: item._fields[0].properties.id});
+        });
+
+        return res.send({ success: true, conectados: conectados });
 
     }).catch(function(err){
         console.log(err);
