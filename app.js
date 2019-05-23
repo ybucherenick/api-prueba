@@ -44,7 +44,7 @@ app.get('/getRelacion/:id', function(req, res){
     session.run('MATCH (a:Servidor {id:{idParam}})-[conectado]->(b:Servidor) RETURN b', {idParam: id}).then(function(result){
         var conectados = [];
         result.records.forEach(function(item){
-            conectados.push({ id: item._fields[0].properties.id});
+            conectados.push(item._fields[0].properties.id);
         });
 
         return res.send({ success: true, conectados: conectados });
@@ -59,3 +59,4 @@ app.listen(3000);
 console.log('Server Started on Port 3000');
 
 module.exports = app;
+
